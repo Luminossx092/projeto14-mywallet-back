@@ -19,7 +19,7 @@ export async function signIn(req, res) {
                 token
             })
         }
-        res.send(token)
+        res.send({token,name: user.name})
     } else {
         res.sendStatus(404)
     }
