@@ -28,8 +28,6 @@ export async function signIn(req, res) {
 export async function signUp(req, res) {
     const { name, email, password } = req.body;
 
-    const validation = CadastroSchema.validate(req.body, { abortEarly: true });
-    if (validation.error) { return res.status(422).send(validation.error.details.map(e => e.message)) }
     try {
         if (await db.collection('users').findOne({ email })) {
             res.status(409).send('Email já cadastrado');

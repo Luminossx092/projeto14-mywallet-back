@@ -1,14 +1,9 @@
 import db from '../config/database.js'
-import {RegistroSchema} from '../Model/RegistroSchema.js'
 
 export async function CreateNewRegistry(req, res){
     const { date, description, valor } = req.body;
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    const validation = RegistroSchema.validate(req.body, { abortEarly: true });
-    if (validation.error) { return res.status(422).send(validation.error.details.map(e => e.message)) }
+    const session = res.locals.session;
     try {
-        const session = await db.collection('sessions').findOne({ token });
-        if (!session) { res.sendStatus(401)}
         await db.collection('balance').insertOne({
             userId: session.userId,
             date,
@@ -23,19 +18,14 @@ export async function CreateNewRegistry(req, res){
 }
 
 export async function ListUserBalance(req,res){
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if(!token) return res.sendStatus(401);
-    const session = await db.collection("sessions").findOne({ token });
-    if (!session) {return res.sendStatus(401);}
-    const user = await db.collection("users").findOne({ 
-		_id: session.userId
-	})
-    if(user) {
-        const userBalance = await db.collection('balance').find({userId:user._id}).toArray();
+    const session = res.locals.session;
+    try{
+        const userBalance = await db.collection('balance').find({userId:session.userId}).toArray();
         res.send(userBalance.map(b=>{
             return {date: b.date,description: b.description,valor: b.valor, id:b._id}
         })).status(200)
-    } else {
+    } 
+    catch {
         res.sendStatus(401);
       }
 }
